@@ -23,6 +23,11 @@
       font-size: 14px;
       min-width: 350px;
     }
+    input[type="text"] {
+      padding: 8px;
+      font-size: 14px;
+      min-width: 350px;
+    }
     .radio-group {
       margin-top: 10px;
     }
@@ -66,9 +71,16 @@
       border: none;
       border-radius: 4px;
       margin-top: 10px;
+      margin-right: 10px;
     }
     button:hover {
       background-color: #0056b3;
+    }
+    .notam-section {
+      background-color: #fff3cd;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
     }
     #result {
       margin-top: 20px;
@@ -123,6 +135,12 @@
         Грузовой рейс
       </label>
     </div>
+    <div class="checkbox-group">
+      <label>
+        <input type="checkbox" id="remoteQuickSelectCheck" value="remote_quick">
+        Быстрый выбор Remote
+      </label>
+    </div>
   </div>
 
   <div id="passengerSection">
@@ -145,16 +163,6 @@
         </select>
       </div>
     </div>
-
-    <div class="section">
-      <label>Категория:</label>
-      <div class="checkbox-group">
-        <label>
-          <input type="checkbox" id="lowcostCharterCheck" value="lowcost_charter">
-          Лоукост / Чартер (летное поле)
-        </label>
-      </div>
-    </div>
   </div>
 
   <div id="cargoSection" class="disabled">
@@ -169,6 +177,16 @@
 
   <button onclick="find()">Найти стойки</button>
   
+  <div class="notam-section">
+    <h3>Закрытые стоянки по NOTAM</h3>
+    <div class="section">
+      <label for="notamStands">Номера стоянок (через запятую):</label>
+      <input type="text" id="notamStands" placeholder="Например: 1, 2, 3A, 4B">
+    </div>
+    <button onclick="loadNotamStands()">Загрузить NOTAM</button>
+    <p id="notamStatus"></p>
+  </div>
+
   <div id="result"></div>
 
   <script>
@@ -286,20 +304,20 @@
         const passengerSection = document.getElementById('passengerSection');
         const cargoSection = document.getElementById('cargoSection');
         const locationSelect = document.getElementById('location');
-        const lowcostCheck = document.getElementById('lowcostCharterCheck');
+        const remoteQuickCheck = document.getElementById('remoteQuickSelectCheck');
 
         if (this.value === 'passenger') {
           passengerSection.classList.remove('disabled');
           cargoSection.classList.add('disabled');
           locationSelect.disabled = false;
-          lowcostCheck.disabled = false;
+          remoteQuickCheck.disabled = false;
         } else {
           passengerSection.classList.add('disabled');
           cargoSection.classList.remove('disabled');
           locationSelect.disabled = true;
           locationSelect.value = '';
-          lowcostCheck.disabled = true;
-          lowcostCheck.checked = false;
+          remoteQuickCheck.disabled = true;
+          remoteQuickCheck.checked = false;
         }
       });
     });
@@ -308,29 +326,29 @@
     document.getElementById('location').addEventListener('change', function() {
       const gateSection = document.getElementById('gateSection');
       const gateFlightType = document.getElementById('gateFlightType');
-      const lowcostCheck = document.getElementById('lowcostCharterCheck');
+      const remoteQuickCheck = document.getElementById('remoteQuickSelectCheck');
 
       if (this.value === 'gate') {
         gateSection.classList.remove('disabled');
         gateFlightType.disabled = false;
-        lowcostCheck.checked = false;
-        lowcostCheck.disabled = true;
+        remoteQuickCheck.checked = false;
+        remoteQuickCheck.disabled = true;
       } else if (this.value === 'remote') {
         gateSection.classList.add('disabled');
         gateFlightType.disabled = true;
         gateFlightType.value = '';
-        lowcostCheck.disabled = false;
+        remoteQuickCheck.disabled = false;
       } else {
         gateSection.classList.add('disabled');
         gateFlightType.disabled = true;
         gateFlightType.value = '';
-        lowcostCheck.checked = false;
-        lowcostCheck.disabled = false;
+        remoteQuickCheck.checked = false;
+        remoteQuickCheck.disabled = false;
       }
     });
 
-    // Обработчик checkbox "Лоукост/Чартер"
-    document.getElementById('lowcostCharterCheck').addEventListener('change', function() {
+    // Обработчик checkbox "Быстрый выбор Remote"
+    document.getElementById('remoteQuickSelectCheck').addEventListener('change', function() {
       const locationSelect = document.getElementById('location');
       
       if (this.checked) {
@@ -341,6 +359,29 @@
         locationSelect.disabled = false;
       }
     });
+
+    function loadNotamStands() {
+      const input = document.getElementById('notamStands').value;
+      const statusDiv = document.getElementById('notamStatus');
+
+      if (!input.trim()) {
+        statusDiv.innerHTML = '<p style="color: #ff9800;">⚠️ Введите номера стоянок</p>';
+        return;
+      }
+
+      // Парсим введенные стоянки (убираем пробелы)
+      const notamStands = input.split(',').map(s => s.trim()).filter(s => s);
+
+      // Обновляем closed_notam во всех терминалах
+      Object.keys(standsData.airports).forEach(airportCode => {
+        const airport = standsData.airports[airportCode];
+        Object.keys(airport.terminals).forEach(terminalCode => {
+          airport.terminals[terminalCode].closed_notam = notamStands;
+        });
+      });
+
+      statusDiv.innerHTML = `<p style="color: #4caf50;">✓ Загружено ${notamStands.length} стоянок: ${notamStands.join(', ')}</p>`;
+    }
 
     function getIntersection(...arrays) {
       if (arrays.length === 0) return [];
@@ -361,7 +402,7 @@
       const location = operationType === 'passenger' ? document.getElementById('location').value : null;
       const gateFlightType = location === 'gate' ? document.getElementById('gateFlightType').value : null;
       const aircraftType = document.getElementById('aircraftType').value;
-      const lowcostCharterChecked = document.getElementById('lowcostCharterCheck').checked;
+      const remoteQuickSelectChecked = document.getElementById('remoteQuickSelectCheck').checked;
       const resultDiv = document.getElementById('result');
 
       // Проверяем, что выбран аэропорт и терминал
@@ -378,6 +419,8 @@
 
       const terminalData = standsData.airports[airport].terminals[terminal];
       const closedStands = terminalData.closed || [];
+      const closedNotamStands = terminalData.closed_notam || [];
+      const allClosedStands = [...new Set([...closedStands, ...closedNotamStands])];
       const arraysToIntersect = [];
       
       if (operationType === 'passenger') {
@@ -386,11 +429,7 @@
             arraysToIntersect.push(terminalData.passenger.gate[gateFlightType]);
           }
         } else if (location === 'remote') {
-          if (lowcostCharterChecked) {
-            arraysToIntersect.push(terminalData.passenger.lowcost_charter);
-          } else {
-            arraysToIntersect.push(terminalData.passenger.remote);
-          }
+          arraysToIntersect.push(terminalData.passenger.remote);
         }
       } else {
         // Cargo
@@ -407,8 +446,8 @@
         resultDiv.innerHTML = '<p style="color: #d32f2f;">❌ Нет доступных стоек для выбранных критериев</p>';
       } else {
         // Разделяем стоянки на активные и закрытые
-        const activeStands = result.filter(stand => !closedStands.includes(stand));
-        const closedResultStands = result.filter(stand => closedStands.includes(stand));
+        const activeStands = result.filter(stand => !allClosedStands.includes(stand));
+        const closedResultStands = result.filter(stand => allClosedStands.includes(stand));
 
         let html = '<p><strong>Доступные места стоянки:</strong></p><div>';
         
