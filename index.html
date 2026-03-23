@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Stands Finder</title>
+</head>
+<body>
+  <h1>Stands Finder (UUWW)</h1>
+
+  <input id="aircraft" placeholder="Введите ICAO тип (например B738)">
+  <button onclick="find()">Найти</button>
+
+  <p id="result"></p>
+
+  <script>
+    async function find() {
+      const type = document.getElementById('aircraft').value.toUpperCase();
+      const res = await fetch('stands.json');
+      const data = await res.json();
+
+      const stands = data.UUWW[type];
+
+      document.getElementById('result').innerText =
+        stands ? stands.join(', ') : 'Нет данных';
+    }
+  </script>
+</body>
+</html>
