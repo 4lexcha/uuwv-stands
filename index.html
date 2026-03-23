@@ -11,18 +11,26 @@
   <button onclick="find()">Найти</button>
 
   <p id="result"></p>
-
+ 
   <script>
-    async function find() {
-      const type = document.getElementById('aircraft').value.toUpperCase();
-      const res = await fetch('stands.json');
-      const data = await res.json();
+	async function find() {
+	  const type = document.getElementById('aircraft').value.toUpperCase();
+	  const res = await fetch('stands.json');
+	  const data = await res.json();
 
-      const stands = data.UUWW[type];
+	  console.log(data);
 
-      document.getElementById('result').innerText =
-        stands ? stands.join(', ') : 'Нет данных';
-    }
-  </script>
+	  const stands = data.UUWW[type];
+
+	  if (!stands) {
+		document.getElementById('result').innerText =
+		  'Тип не найден: ' + type;
+		return;
+	  }
+
+	  document.getElementById('result').innerText =
+		stands.join(', ');
+	}
+	</script>
 </body>
 </html>
