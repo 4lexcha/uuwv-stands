@@ -77,6 +77,21 @@
       border-radius: 5px;
       min-height: 40px;
     }
+    .stand-item {
+      display: inline-block;
+      margin-right: 10px;
+      padding: 5px 8px;
+      border-radius: 3px;
+    }
+    .stand-active {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    .stand-closed {
+      background-color: #ffebee;
+      color: #c62828;
+      text-decoration: line-through;
+    }
   </style>
 </head>
 <body>
@@ -112,12 +127,23 @@
 
   <div id="passengerSection">
     <div class="section">
-      <label for="flightType">Тип рейса:</label>
-      <select id="flightType">
+      <label for="location">Расположение:</label>
+      <select id="location">
         <option value="">-- Не выбрано --</option>
-        <option value="international">Международный</option>
-        <option value="domestic">Внутренний</option>
+        <option value="gate">Рукав терминала (Gate)</option>
+        <option value="remote">Летное поле (Remote)</option>
       </select>
+    </div>
+
+    <div id="gateSection" class="disabled">
+      <div class="section">
+        <label for="gateFlightType">Тип рейса (Gate):</label>
+        <select id="gateFlightType" disabled>
+          <option value="">-- Не выбрано --</option>
+          <option value="international">Международный</option>
+          <option value="domestic">Внутренний</option>
+        </select>
+      </div>
     </div>
 
     <div class="section">
@@ -128,15 +154,6 @@
           Лоукост / Чартер (летное поле)
         </label>
       </div>
-    </div>
-
-    <div class="section">
-      <label for="location">Расположение:</label>
-      <select id="location">
-        <option value="">-- Не выбрано --</option>
-        <option value="gate">Рукав терминала (Gate)</option>
-        <option value="remote">Летное поле (Remote)</option>
-      </select>
     </div>
   </div>
 
@@ -153,7 +170,7 @@
 
   <button onclick="find()">Найти стойки</button>
   
-  <p id="result"></p>
+  <div id="result"></div>
 
   <script>
     let standsData = {};
@@ -176,7 +193,7 @@
       })
       .catch(error => {
         console.error('Ошибка при загрузке данных:', error);
-        document.getElementById('result').innerText = 'Ошибка при загрузке данных';
+        document.getElementById('result').innerHTML = '<p style="color: red;">Ошибка при загрузке данных</p>';
       });
 
     // Обновляем терминалы при выборе аэропорта
@@ -210,23 +227,48 @@
       radio.addEventListener('change', function() {
         const passengerSection = document.getElementById('passengerSection');
         const cargoSection = document.getElementById('cargoSection');
-        const lowcostCheck = document.getElementById('lowcostCharterCheck');
         const locationSelect = document.getElementById('location');
+        const lowcostCheck = document.getElementById('lowcostCharterCheck');
 
         if (this.value === 'passenger') {
           passengerSection.classList.remove('disabled');
           cargoSection.classList.add('disabled');
-          lowcostCheck.disabled = false;
           locationSelect.disabled = false;
+          lowcostCheck.disabled = false;
         } else {
           passengerSection.classList.add('disabled');
           cargoSection.classList.remove('disabled');
-          lowcostCheck.disabled = true;
-          lowcostCheck.checked = false;
           locationSelect.disabled = true;
           locationSelect.value = '';
+          lowcostCheck.disabled = true;
+          lowcostCheck.checked = false;
         }
       });
+    });
+
+    // Обработчик выбора расположения
+    document.getElementById('location').addEventListener('change', function() {
+      const gateSection = document.getElementById('gateSection');
+      const gateFlightType = document.getElementById('gateFlightType');
+      const lowcostCheck = document.getElementById('lowcostCharterCheck');
+
+      if (this.value === 'gate') {
+        gateSection.classList.remove('disabled');
+        gateFlightType.disabled = false;
+        lowcostCheck.checked = false;
+        lowcostCheck.disabled = true;
+      } else if (this.value === 'remote') {
+        gateSection.classList.add('disabled');
+        gateFlightType.disabled = true;
+        gateFlightType.value = '';
+        lowcostCheck.disabled = false;
+      } else {
+        gateSection.classList.add('disabled');
+        gateFlightType.disabled = true;
+        gateFlightType.value = '';
+        lowcostCheck.checked = false;
+        lowcostCheck.disabled = false;
+      }
     });
 
     // Обработчик checkbox "Лоукост/Чартер"
@@ -234,11 +276,9 @@
       const locationSelect = document.getElementById('location');
       
       if (this.checked) {
-        // При выборе лоукост - автоматически выбираем remote
         locationSelect.value = 'remote';
         locationSelect.disabled = true;
       } else {
-        // При снятии галки - разблокируем выбор
         locationSelect.value = '';
         locationSelect.disabled = false;
       }
@@ -247,12 +287,10 @@
     function getIntersection(...arrays) {
       if (arrays.length === 0) return [];
       
-      // Фильтруем пустые массивы
       const nonEmptyArrays = arrays.filter(arr => arr && arr.length > 0);
       
       if (nonEmptyArrays.length === 0) return [];
       
-      // Берем первый массив и фильтруем его элементы
       return nonEmptyArrays[0].filter(item =>
         nonEmptyArrays.every(arr => arr.includes(item))
       );
@@ -262,59 +300,72 @@
       const airport = document.getElementById('airport').value;
       const terminal = document.getElementById('terminal').value;
       const operationType = document.querySelector('input[name="operationType"]:checked').value;
-      const flightType = operationType === 'passenger' ? document.getElementById('flightType').value : null;
+      const location = operationType === 'passenger' ? document.getElementById('location').value : null;
+      const gateFlightType = location === 'gate' ? document.getElementById('gateFlightType').value : null;
       const aircraftType = document.getElementById('aircraftType').value;
       const lowcostCharterChecked = document.getElementById('lowcostCharterCheck').checked;
-      const location = document.getElementById('location').value;
       const resultDiv = document.getElementById('result');
 
       // Проверяем, что выбран аэропорт и терминал
       if (!airport || !terminal) {
-        resultDiv.innerText = '⚠️ Выберите аэропорт и терминал';
+        resultDiv.innerHTML = '<p style="color: #ff9800;">⚠️ Выберите аэропорт и терминал</p>';
         return;
       }
 
-      // Проверяем, что выбран хотя бы один критерий (для пассажирского)
-      if (operationType === 'passenger' && !flightType && !aircraftType && !lowcostCharterChecked && !location) {
-        resultDiv.innerText = '⚠️ Выберите хотя бы один критерий';
+      // Проверяем, что выбран хотя бы один критерий
+      if (operationType === 'passenger' && !location && !aircraftType) {
+        resultDiv.innerHTML = '<p style="color: #ff9800;">⚠️ Выберите расположение или тип самолета</p>';
         return;
       }
 
       const terminalData = standsData.airports[airport].terminals[terminal];
-      
-      // Собираем массивы для пересечения
+      const closedStands = terminalData.closed || [];
       const arraysToIntersect = [];
       
       if (operationType === 'passenger') {
-        const passengerData = terminalData.passenger;
-        
-        if (flightType && passengerData[flightType].length > 0) {
-          arraysToIntersect.push(passengerData[flightType]);
-        }
-        if (lowcostCharterChecked && passengerData['lowcost_charter'].length > 0) {
-          arraysToIntersect.push(passengerData['lowcost_charter']);
+        if (location === 'gate') {
+          if (gateFlightType) {
+            arraysToIntersect.push(terminalData.passenger.gate[gateFlightType]);
+          }
+        } else if (location === 'remote') {
+          if (lowcostCharterChecked) {
+            arraysToIntersect.push(terminalData.passenger.lowcost_charter);
+          } else {
+            arraysToIntersect.push(terminalData.passenger.remote);
+          }
         }
       } else {
-        // Cargo операция
-        if (terminalData.cargo.length > 0) {
-          arraysToIntersect.push(terminalData.cargo);
-        }
+        // Cargo
+        arraysToIntersect.push(terminalData.cargo);
       }
 
       if (aircraftType && terminalData[aircraftType].length > 0) {
         arraysToIntersect.push(terminalData[aircraftType]);
       }
-      if (location && terminalData[location].length > 0) {
-        arraysToIntersect.push(terminalData[location]);
-      }
 
-      // Вычисляем пересечение
       const result = getIntersection(...arraysToIntersect);
 
       if (result.length === 0) {
-        resultDiv.innerHTML = '❌ Нет доступных стоек для выбранных критериев';
+        resultDiv.innerHTML = '<p style="color: #d32f2f;">❌ Нет доступных стоек для выбранных критериев</p>';
       } else {
-        resultDiv.innerHTML = `<strong>Доступные стойки:</strong><br>${result.join(', ')}`;
+        // Разделяем стоянки на активные и закрытые
+        const activeStands = result.filter(stand => !closedStands.includes(stand));
+        const closedResultStands = result.filter(stand => closedStands.includes(stand));
+
+        let html = '<p><strong>Доступные стойки:</strong></p><div>';
+        
+        // Выводим активные стоянки зеленым
+        activeStands.forEach(stand => {
+          html += `<span class="stand-item stand-active">${stand}</span>`;
+        });
+
+        // Выводим закрытые стоянки красным и зачеркнутыми
+        closedResultStands.forEach(stand => {
+          html += `<span class="stand-item stand-closed">${stand}</span>`;
+        });
+
+        html += '</div>';
+        resultDiv.innerHTML = html;
       }
     }
   </script>
