@@ -127,17 +127,17 @@
     <label>Тип операции:</label>
     <div class="radio-group">
       <label>
-        <input type="radio" name="operationType" value="passenger" checked>
+        <input type="radio" name="operationType" value="passenger" checked disabled>
         Пассажирский рейс
       </label>
       <label>
-        <input type="radio" name="operationType" value="cargo">
+        <input type="radio" name="operationType" value="cargo" disabled>
         Грузовой рейс
       </label>
     </div>
     <div class="checkbox-group">
       <label>
-        <input type="checkbox" id="remoteQuickSelectCheck" value="remote_quick">
+        <input type="checkbox" id="remoteQuickSelectCheck" value="remote_quick" disabled>
         Lowcost/Charter
       </label>
     </div>
@@ -146,7 +146,7 @@
   <div id="passengerSection">
     <div class="section">
       <label for="location">Расположение:</label>
-      <select id="location">
+      <select id="location" disabled>
         <option value="">-- Не выбрано --</option>
         <option value="gate">Рукав терминала (Gate)</option>
         <option value="remote">Летное поле (Remote)</option>
@@ -175,7 +175,7 @@
     </select>
   </div>
 
-  <button onclick="find()">Найти стойки</button>
+  <button onclick="find()">Найти стоянки</button>
   
   <div class="notam-section">
     <h3>Закрытые стоянки по NOTAM</h3>
@@ -366,7 +366,7 @@
       passengerSection.classList.remove('disabled');
       cargoSection.classList.add('disabled');
       locationSelect.value = '';
-      locationSelect.disabled = false;
+      locationSelect.disabled = true;
       gateSection.classList.add('disabled');
       gateFlightType.disabled = true;
       gateFlightType.value = '';
@@ -427,7 +427,7 @@
         });
         passengerSection.classList.remove('disabled');
         cargoSection.classList.add('disabled');
-        locationSelect.disabled = false;
+        locationSelect.disabled = true;
         locationSelect.value = '';
         gateSection.classList.add('disabled');
         gateFlightType.disabled = true;
