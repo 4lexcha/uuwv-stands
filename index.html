@@ -125,9 +125,18 @@
       <div class="checkbox-group">
         <label>
           <input type="checkbox" id="lowcostCharterCheck" value="lowcost_charter">
-          Лоукост / Чартер
+          Лоукост / Чартер (летное поле)
         </label>
       </div>
+    </div>
+
+    <div class="section">
+      <label for="location">Расположение:</label>
+      <select id="location">
+        <option value="">-- Не выбрано --</option>
+        <option value="gate">Рукав терминала (Gate)</option>
+        <option value="remote">Летное поле (Remote)</option>
+      </select>
     </div>
   </div>
 
@@ -139,15 +148,6 @@
     <label for="aircraftType">Тип самолета:</label>
     <select id="aircraftType">
       <option value="">-- Не выбрано --</option>
-    </select>
-  </div>
-
-  <div class="section">
-    <label for="location">Расположение:</label>
-    <select id="location">
-      <option value="">-- Не выбрано --</option>
-      <option value="gate">Рукав терминала (Gate)</option>
-      <option value="remote">Летное поле (Remote)</option>
     </select>
   </div>
 
@@ -211,18 +211,37 @@
         const passengerSection = document.getElementById('passengerSection');
         const cargoSection = document.getElementById('cargoSection');
         const lowcostCheck = document.getElementById('lowcostCharterCheck');
+        const locationSelect = document.getElementById('location');
 
         if (this.value === 'passenger') {
           passengerSection.classList.remove('disabled');
           cargoSection.classList.add('disabled');
           lowcostCheck.disabled = false;
+          locationSelect.disabled = false;
         } else {
           passengerSection.classList.add('disabled');
           cargoSection.classList.remove('disabled');
           lowcostCheck.disabled = true;
           lowcostCheck.checked = false;
+          locationSelect.disabled = true;
+          locationSelect.value = '';
         }
       });
+    });
+
+    // Обработчик checkbox "Лоукост/Чартер"
+    document.getElementById('lowcostCharterCheck').addEventListener('change', function() {
+      const locationSelect = document.getElementById('location');
+      
+      if (this.checked) {
+        // При выборе лоукост - автоматически выбираем remote
+        locationSelect.value = 'remote';
+        locationSelect.disabled = true;
+      } else {
+        // При снятии галки - разблокируем выбор
+        locationSelect.value = '';
+        locationSelect.disabled = false;
+      }
     });
 
     function getIntersection(...arrays) {
