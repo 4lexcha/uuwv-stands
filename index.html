@@ -362,21 +362,46 @@
       const gateSection = document.getElementById('gateSection');
       const gateFlightType = document.getElementById('gateFlightType');
       const remoteQuickCheck = document.getElementById('remoteQuickSelectCheck');
+      const operationRadios = document.querySelectorAll('input[name="operationType"]');
+      const passengerRadio = document.querySelector('input[name="operationType"][value="passenger"]');
+      const cargoRadio = document.querySelector('input[name="operationType"][value="cargo"]');
+      const passengerSection = document.getElementById('passengerSection');
+      const cargoSection = document.getElementById('cargoSection');
       const aircraftSelect = document.getElementById('aircraftType');
 
       if (airport === 'UUWW' && this.value === 'terminal3') {
+        if (passengerRadio) {
+          passengerRadio.checked = true;
+        }
+        operationRadios.forEach(radio => {
+          radio.disabled = true;
+        });
+        passengerSection.classList.remove('disabled');
+        cargoSection.classList.add('disabled');
         locationSelect.value = 'remote';
         locationSelect.disabled = true;
         gateSection.classList.add('disabled');
         gateFlightType.disabled = true;
         gateFlightType.value = '';
-        remoteQuickCheck.disabled = false;
+        remoteQuickCheck.checked = false;
+        remoteQuickCheck.disabled = true;
       } else {
+        operationRadios.forEach(radio => {
+          radio.disabled = false;
+        });
+        if (cargoRadio && cargoRadio.checked) {
+          passengerSection.classList.add('disabled');
+          cargoSection.classList.remove('disabled');
+        } else {
+          passengerSection.classList.remove('disabled');
+          cargoSection.classList.add('disabled');
+        }
         locationSelect.disabled = false;
         locationSelect.value = '';
         gateSection.classList.add('disabled');
         gateFlightType.disabled = true;
         gateFlightType.value = '';
+        remoteQuickCheck.checked = false;
         remoteQuickCheck.disabled = false;
       }
 
