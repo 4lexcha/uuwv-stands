@@ -331,6 +331,15 @@
     // Обновляем терминалы при выборе аэропорта
     document.getElementById('airport').addEventListener('change', function() {
       const terminalSelect = document.getElementById('terminal');
+      const operationRadios = document.querySelectorAll('input[name="operationType"]');
+      const passengerRadio = document.querySelector('input[name="operationType"][value="passenger"]');
+      const cargoRadio = document.querySelector('input[name="operationType"][value="cargo"]');
+      const passengerSection = document.getElementById('passengerSection');
+      const cargoSection = document.getElementById('cargoSection');
+      const locationSelect = document.getElementById('location');
+      const gateSection = document.getElementById('gateSection');
+      const gateFlightType = document.getElementById('gateFlightType');
+      const remoteQuickCheck = document.getElementById('remoteQuickSelectCheck');
       terminalSelect.innerHTML = '<option value="">-- Выберите терминал --</option>';
       
       if (this.value) {
@@ -343,6 +352,26 @@
           terminalSelect.appendChild(option);
         });
       }
+
+      // По умолчанию опции типа операции и Lowcost/Charter недоступны
+      if (passengerRadio) {
+        passengerRadio.checked = true;
+      }
+      if (cargoRadio) {
+        cargoRadio.checked = false;
+      }
+      operationRadios.forEach(radio => {
+        radio.disabled = true;
+      });
+      passengerSection.classList.remove('disabled');
+      cargoSection.classList.add('disabled');
+      locationSelect.value = '';
+      locationSelect.disabled = false;
+      gateSection.classList.add('disabled');
+      gateFlightType.disabled = true;
+      gateFlightType.value = '';
+      remoteQuickCheck.checked = false;
+      remoteQuickCheck.disabled = true;
 
       // Сбрасываем тип самолета к полному списку
       const aircraftSelect = document.getElementById('aircraftType');
@@ -368,8 +397,28 @@
       const passengerSection = document.getElementById('passengerSection');
       const cargoSection = document.getElementById('cargoSection');
       const aircraftSelect = document.getElementById('aircraftType');
+      const isVnukovo1 = airport === 'UUWW' && this.value === 'terminal1';
 
-      if (airport === 'UUWW' && this.value === 'terminal3') {
+      if (isVnukovo1) {
+        operationRadios.forEach(radio => {
+          radio.disabled = false;
+        });
+        if (cargoRadio && cargoRadio.checked) {
+          passengerSection.classList.add('disabled');
+          cargoSection.classList.remove('disabled');
+          locationSelect.disabled = true;
+        } else {
+          passengerSection.classList.remove('disabled');
+          cargoSection.classList.add('disabled');
+          locationSelect.disabled = false;
+        }
+        locationSelect.value = '';
+        gateSection.classList.add('disabled');
+        gateFlightType.disabled = true;
+        gateFlightType.value = '';
+        remoteQuickCheck.checked = false;
+        remoteQuickCheck.disabled = false;
+      } else {
         if (passengerRadio) {
           passengerRadio.checked = true;
         }
@@ -378,24 +427,6 @@
         });
         passengerSection.classList.remove('disabled');
         cargoSection.classList.add('disabled');
-        locationSelect.value = 'remote';
-        locationSelect.disabled = true;
-        gateSection.classList.add('disabled');
-        gateFlightType.disabled = true;
-        gateFlightType.value = '';
-        remoteQuickCheck.checked = false;
-        remoteQuickCheck.disabled = true;
-      } else {
-        operationRadios.forEach(radio => {
-          radio.disabled = false;
-        });
-        if (cargoRadio && cargoRadio.checked) {
-          passengerSection.classList.add('disabled');
-          cargoSection.classList.remove('disabled');
-        } else {
-          passengerSection.classList.remove('disabled');
-          cargoSection.classList.add('disabled');
-        }
         locationSelect.disabled = false;
         locationSelect.value = '';
         gateSection.classList.add('disabled');
@@ -445,12 +476,15 @@
         const cargoSection = document.getElementById('cargoSection');
         const locationSelect = document.getElementById('location');
         const remoteQuickCheck = document.getElementById('remoteQuickSelectCheck');
+        const airport = document.getElementById('airport').value;
+        const terminal = document.getElementById('terminal').value;
+        const isVnukovo1 = airport === 'UUWW' && terminal === 'terminal1';
 
         if (this.value === 'passenger') {
           passengerSection.classList.remove('disabled');
           cargoSection.classList.add('disabled');
           locationSelect.disabled = false;
-          remoteQuickCheck.disabled = false;
+          remoteQuickCheck.disabled = !isVnukovo1;
         } else {
           passengerSection.classList.add('disabled');
           cargoSection.classList.remove('disabled');
@@ -467,6 +501,9 @@
       const gateSection = document.getElementById('gateSection');
       const gateFlightType = document.getElementById('gateFlightType');
       const remoteQuickCheck = document.getElementById('remoteQuickSelectCheck');
+      const airport = document.getElementById('airport').value;
+      const terminal = document.getElementById('terminal').value;
+      const isVnukovo1 = airport === 'UUWW' && terminal === 'terminal1';
 
       if (this.value === 'gate') {
         gateSection.classList.remove('disabled');
@@ -477,13 +514,13 @@
         gateSection.classList.add('disabled');
         gateFlightType.disabled = true;
         gateFlightType.value = '';
-        remoteQuickCheck.disabled = false;
+        remoteQuickCheck.disabled = !isVnukovo1;
       } else {
         gateSection.classList.add('disabled');
         gateFlightType.disabled = true;
         gateFlightType.value = '';
         remoteQuickCheck.checked = false;
-        remoteQuickCheck.disabled = false;
+        remoteQuickCheck.disabled = !isVnukovo1;
       }
     });
 
