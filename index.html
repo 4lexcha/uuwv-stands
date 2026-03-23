@@ -287,6 +287,16 @@
           terminalSelect.appendChild(option);
         });
       }
+
+      // Сбрасываем тип самолета к полному списку
+      const aircraftSelect = document.getElementById('aircraftType');
+      aircraftSelect.innerHTML = '<option value="">-- Не выбрано --</option>';
+      aircraftTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type.code;
+        option.textContent = type.name;
+        aircraftSelect.appendChild(option);
+      });
     });
 
     // Обработчик смены терминала
@@ -296,6 +306,7 @@
       const gateSection = document.getElementById('gateSection');
       const gateFlightType = document.getElementById('gateFlightType');
       const remoteQuickCheck = document.getElementById('remoteQuickSelectCheck');
+      const aircraftSelect = document.getElementById('aircraftType');
 
       if (airport === 'UUWW' && this.value === 'terminal3') {
         locationSelect.value = 'remote';
@@ -311,6 +322,29 @@
         gateFlightType.disabled = true;
         gateFlightType.value = '';
         remoteQuickCheck.disabled = false;
+      }
+
+      // Обновляем список типов самолетов в зависимости от терминала
+      aircraftSelect.innerHTML = '<option value="">-- Не выбрано --</option>';
+      if (this.value && airport) {
+        const airportData = standsData.airports[airport];
+        const terminalData = airportData.terminals[this.value];
+        aircraftTypes.forEach(type => {
+          if (terminalData[type.code] && terminalData[type.code].length > 0) {
+            const option = document.createElement('option');
+            option.value = type.code;
+            option.textContent = type.name;
+            aircraftSelect.appendChild(option);
+          }
+        });
+      } else {
+        // Если терминал не выбран, показываем все типы
+        aircraftTypes.forEach(type => {
+          const option = document.createElement('option');
+          option.value = type.code;
+          option.textContent = type.name;
+          aircraftSelect.appendChild(option);
+        });
       }
     });
 
@@ -443,28 +477,26 @@
       }
 
       const terminalData = standsData.airports[airport].terminals[terminal];
-      const isTerminal3 = airport === 'UUWW' && terminal === 'terminal3';
-      const effectiveTerminalData = isTerminal3 ? standsData.airports[airport].terminals.terminal1 : terminalData;
-      const closedStands = effectiveTerminalData.closed || [];
-      const closedNotamStands = effectiveTerminalData.closed_notam || [];
+      const closedStands = terminalData.closed || [];
+      const closedNotamStands = terminalData.closed_notam || [];
       const allClosedStands = [...new Set([...closedStands, ...closedNotamStands])];
       const arraysToIntersect = [];
       
       if (operationType === 'passenger') {
         if (location === 'gate') {
           if (gateFlightType) {
-            arraysToIntersect.push(effectiveTerminalData.passenger.gate[gateFlightType]);
+            arraysToIntersect.push((terminalData.passenger && terminalData.passenger.gate && terminalData.passenger.gate[gateFlightType]) || []);
           }
         } else if (location === 'remote') {
-          arraysToIntersect.push(effectiveTerminalData.passenger.remote);
+          arraysToIntersect.push((terminalData.passenger && terminalData.passenger.remote) || []);
         }
       } else {
         // Cargo
-        arraysToIntersect.push(effectiveTerminalData.cargo);
+        arraysToIntersect.push(terminalData.cargo || []);
       }
 
-      if (aircraftType && effectiveTerminalData[aircraftType] && effectiveTerminalData[aircraftType].length > 0) {
-        arraysToIntersect.push(effectiveTerminalData[aircraftType]);
+      if (aircraftType && terminalData[aircraftType] && terminalData[aircraftType].length > 0) {
+        arraysToIntersect.push(terminalData[aircraftType]);
       }
 
       const result = getIntersection(...arraysToIntersect);
