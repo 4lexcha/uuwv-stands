@@ -23,6 +23,40 @@
       font-size: 14px;
       min-width: 250px;
     }
+    .radio-group {
+      margin-top: 10px;
+    }
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      font-weight: normal;
+      margin: 8px 0;
+    }
+    .radio-group input[type="radio"] {
+      margin-right: 10px;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .checkbox-group {
+      margin-top: 10px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-weight: normal;
+      margin: 5px 0;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 10px;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
     button {
       padding: 10px 20px;
       font-size: 16px;
@@ -63,27 +97,48 @@
   </div>
 
   <div class="section">
-    <label for="flightType">Тип рейса:</label>
-    <select id="flightType">
-      <option value="">-- Не выбрано --</option>
-      <option value="international">Международный</option>
-      <option value="domestic">Внутренний</option>
-    </select>
+    <label>Тип операции:</label>
+    <div class="radio-group">
+      <label>
+        <input type="radio" name="operationType" value="passenger" checked>
+        Пассажирский рейс
+      </label>
+      <label>
+        <input type="radio" name="operationType" value="cargo">
+        Грузовой рейс
+      </label>
+    </div>
+  </div>
+
+  <div id="passengerSection">
+    <div class="section">
+      <label for="flightType">Тип рейса:</label>
+      <select id="flightType">
+        <option value="">-- Не выбрано --</option>
+        <option value="international">Международный</option>
+        <option value="domestic">Внутренний</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label>Категория:</label>
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="lowcostCharterCheck" value="lowcost_charter">
+          Лоукост / Чартер
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div id="cargoSection" class="disabled">
+    <p style="font-size: 14px; color: #666;">Грузовой рейс - стойки 32-35</p>
   </div>
 
   <div class="section">
     <label for="aircraftType">Тип самолета:</label>
     <select id="aircraftType">
       <option value="">-- Не выбрано --</option>
-    </select>
-  </div>
-
-  <div class="section">
-    <label for="category">Категория:</label>
-    <select id="category">
-      <option value="">-- Не выбрано --</option>
-      <option value="lowcost">Лоукост</option>
-      <option value="charter">Чартер</option>
     </select>
   </div>
 
@@ -150,6 +205,26 @@
       aircraftSelect.appendChild(option);
     });
 
+    // Обработчик смены типа операции
+    document.querySelectorAll('input[name="operationType"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const passengerSection = document.getElementById('passengerSection');
+        const cargoSection = document.getElementById('cargoSection');
+        const lowcostCheck = document.getElementById('lowcostCharterCheck');
+
+        if (this.value === 'passenger') {
+          passengerSection.classList.remove('disabled');
+          cargoSection.classList.add('disabled');
+          lowcostCheck.disabled = false;
+        } else {
+          passengerSection.classList.add('disabled');
+          cargoSection.classList.remove('disabled');
+          lowcostCheck.disabled = true;
+          lowcostCheck.checked = false;
+        }
+      });
+    });
+
     function getIntersection(...arrays) {
       if (arrays.length === 0) return [];
       
@@ -167,9 +242,10 @@
     function find() {
       const airport = document.getElementById('airport').value;
       const terminal = document.getElementById('terminal').value;
-      const flightType = document.getElementById('flightType').value;
+      const operationType = document.querySelector('input[name="operationType"]:checked').value;
+      const flightType = operationType === 'passenger' ? document.getElementById('flightType').value : null;
       const aircraftType = document.getElementById('aircraftType').value;
-      const category = document.getElementById('category').value;
+      const lowcostCharterChecked = document.getElementById('lowcostCharterCheck').checked;
       const location = document.getElementById('location').value;
       const resultDiv = document.getElementById('result');
 
@@ -179,8 +255,8 @@
         return;
       }
 
-      // Проверяем, что выбран хотя бы один критерий
-      if (!flightType && !aircraftType && !category && !location) {
+      // Проверяем, что выбран хотя бы один критерий (для пассажирского)
+      if (operationType === 'passenger' && !flightType && !aircraftType && !lowcostCharterChecked && !location) {
         resultDiv.innerText = '⚠️ Выберите хотя бы один критерий';
         return;
       }
@@ -190,14 +266,24 @@
       // Собираем массивы для пересечения
       const arraysToIntersect = [];
       
-      if (flightType && terminalData[flightType].length > 0) {
-        arraysToIntersect.push(terminalData[flightType]);
+      if (operationType === 'passenger') {
+        const passengerData = terminalData.passenger;
+        
+        if (flightType && passengerData[flightType].length > 0) {
+          arraysToIntersect.push(passengerData[flightType]);
+        }
+        if (lowcostCharterChecked && passengerData['lowcost_charter'].length > 0) {
+          arraysToIntersect.push(passengerData['lowcost_charter']);
+        }
+      } else {
+        // Cargo операция
+        if (terminalData.cargo.length > 0) {
+          arraysToIntersect.push(terminalData.cargo);
+        }
       }
+
       if (aircraftType && terminalData[aircraftType].length > 0) {
         arraysToIntersect.push(terminalData[aircraftType]);
-      }
-      if (category && terminalData[category].length > 0) {
-        arraysToIntersect.push(terminalData[category]);
       }
       if (location && terminalData[location].length > 0) {
         arraysToIntersect.push(terminalData[location]);
