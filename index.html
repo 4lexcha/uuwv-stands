@@ -158,7 +158,6 @@
   </div>
 
   <div id="cargoSection" class="disabled">
-    <p style="font-size: 14px; color: #666;">Грузовой рейс - стойки 32-37</p>
   </div>
 
   <div class="section">
@@ -411,7 +410,7 @@
         const activeStands = result.filter(stand => !closedStands.includes(stand));
         const closedResultStands = result.filter(stand => closedStands.includes(stand));
 
-        let html = '<p><strong>Доступные стойки:</strong></p><div>';
+        let html = '<p><strong>Доступные места стоянки:</strong></p><div>';
         
         // Выводим активные стоянки зеленым
         activeStands.forEach(stand => {
