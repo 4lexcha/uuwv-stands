@@ -21,7 +21,7 @@
     select {
       padding: 8px;
       font-size: 14px;
-      min-width: 250px;
+      min-width: 350px;
     }
     .radio-group {
       margin-top: 10px;
@@ -158,7 +158,7 @@
   </div>
 
   <div id="cargoSection" class="disabled">
-    <p style="font-size: 14px; color: #666;">Грузовой рейс - стойки 32-35</p>
+    <p style="font-size: 14px; color: #666;">Грузовой рейс - стойки 32-37</p>
   </div>
 
   <div class="section">
@@ -174,7 +174,66 @@
 
   <script>
     let standsData = {};
-    const aircraftTypes = ["A320", "A321", "B738", "B737", "B77W", "B772", "B744", "B788", "A333", "SU95"];
+    const aircraftTypes = [
+      { code: "A220", name: "A220 (Airbus A220-300)" },
+      { code: "A306", name: "A306 (Airbus A300-600 / A300-600R)" },
+      { code: "A310", name: "A310 (Airbus A310-200 / -222 / -300)" },
+      { code: "A318", name: "A318 (Airbus A318)" },
+      { code: "A319", name: "A319 (Airbus A319-100)" },
+      { code: "A19N", name: "A19N (Airbus A319-100 Sharklet / NEO)" },
+      { code: "A320", name: "A320 (Airbus A320-100 / -200 / -210)" },
+      { code: "A20N", name: "A20N (Airbus A320-200 Sharklet / NEO)" },
+      { code: "A321", name: "A321 (Airbus A321-100 / -200)" },
+      { code: "A21N", name: "A21N (Airbus A321-100 Sharklet / A321-200 Sharklet / NEO)" },
+      { code: "A332", name: "A332 (Airbus A330-200)" },
+      { code: "A333", name: "A333 (Airbus A330-300)" },
+      { code: "A338", name: "A338 (Airbus A330-800)" },
+      { code: "A343", name: "A343 (Airbus A340-200 / -300 / -300E)" },
+      { code: "A345", name: "A345 (Airbus A340-500)" },
+      { code: "A346", name: "A346 (Airbus A340-600)" },
+      { code: "A359", name: "A359 (Airbus A350-900)" },
+      { code: "A388", name: "A388 (Airbus A380-700 / -800)" },
+      { code: "AT43", name: "AT43 (ATR ATR-42-300 / -320 / -500)" },
+      { code: "AT72", name: "AT72 (ATR ATR-72-200 / -210 / -500)" },
+      { code: "B722", name: "B722 (Boeing B727-200)" },
+      { code: "B732", name: "B732 (Boeing B737-200)" },
+      { code: "B733", name: "B733 (Boeing B737-300 / -300W)" },
+      { code: "B734", name: "B734 (Boeing B737-400)" },
+      { code: "B735", name: "B735 (Boeing B737-500 / -500W)" },
+      { code: "B736", name: "B736 (Boeing B737-600 / -600W)" },
+      { code: "B737", name: "B737 (Boeing B737-700 / -700W / BBJ)" },
+      { code: "B738", name: "B738 (Boeing B737-800 / -800W / BBJ2 / SSW)" },
+      { code: "B739", name: "B739 (Boeing B737-900 / -900ER / -900W / -900ERW)" },
+      { code: "B38M", name: "B38M (Boeing B737 MAX 8)" },
+      { code: "B39M", name: "B39M (Boeing B737 MAX 9)" },
+      { code: "B741", name: "B741 (Boeing B747-100)" },
+      { code: "B744", name: "B744 (Boeing B747-400)" },
+      { code: "B747", name: "B747 (Boeing B747SP)" },
+      { code: "B748", name: "B748 (Boeing B747-8)" },
+      { code: "B752", name: "B752 (Boeing B757-200 / Freighter / -200W)" },
+      { code: "B753", name: "B753 (Boeing B757-300)" },
+      { code: "B762", name: "B762 (Boeing B767-200 / -200ER)" },
+      { code: "B763", name: "B763 (Boeing B767-300 / -300ER / -300W)" },
+      { code: "B764", name: "B764 (Boeing B767-400ER)" },
+      { code: "B772", name: "B772 (Boeing B777-200 / -200ER)" },
+      { code: "B77L", name: "B77L (Boeing B777-200LR / Freighter)" },
+      { code: "B773", name: "B773 (Boeing B777-300)" },
+      { code: "B77W", name: "B77W (Boeing B777-300ER)" },
+      { code: "B788", name: "B788 (Boeing B787-8 / B787-9)" },
+      { code: "C130", name: "C130 (Lockheed C-130H / C-130J)" },
+      { code: "C17", name: "C17 (Boeing C-17A)" },
+      { code: "CRJ2", name: "CRJ2 (Bombardier CRJ-100 / CRJ-200)" },
+      { code: "AN12", name: "AN12 (Antonov An-12)" },
+      { code: "AN22", name: "AN22 (Antonov An-22)" },
+      { code: "AN72", name: "AN72 (Antonov An-72 / An-74)" },
+      { code: "A124", name: "A124 (Antonov An-124-100)" },
+      { code: "IL62", name: "IL62 (Ilyushin Il-62)" },
+      { code: "IL76", name: "IL76 (Ilyushin Il-76)" },
+      { code: "IL96", name: "IL96 (Ilyushin Il-96-300 / Il-96-400T)" },
+      { code: "SU95", name: "SU95 (Sukhoi RRJ-95)" },
+      { code: "T204", name: "T204 (Tupolev Tu-204 / Tu-214)" },
+      { code: "YK40", name: "YK40 (Yakovlev Yak-40)" }
+    ];
 
     // Загружаем данные при загрузке страницы
     fetch('stands.json')
@@ -217,8 +276,8 @@
     const aircraftSelect = document.getElementById('aircraftType');
     aircraftTypes.forEach(type => {
       const option = document.createElement('option');
-      option.value = type;
-      option.textContent = type;
+      option.value = type.code;
+      option.textContent = type.name;
       aircraftSelect.appendChild(option);
     });
 
@@ -339,7 +398,7 @@
         arraysToIntersect.push(terminalData.cargo);
       }
 
-      if (aircraftType && terminalData[aircraftType].length > 0) {
+      if (aircraftType && terminalData[aircraftType] && terminalData[aircraftType].length > 0) {
         arraysToIntersect.push(terminalData[aircraftType]);
       }
 
