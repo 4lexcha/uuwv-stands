@@ -3,34 +3,215 @@
 <head>
   <meta charset="UTF-8">
   <title>Stands Finder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+    .section {
+      margin: 20px 0;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px 0;
+      font-weight: bold;
+    }
+    select {
+      padding: 8px;
+      font-size: 14px;
+      min-width: 250px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      min-height: 40px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Stands Finder (UUWW)</h1>
+  <h1>Stands Finder</h1>
+  
+  <div class="section">
+    <label for="airport">Аэропорт:</label>
+    <select id="airport">
+      <option value="">-- Выберите аэропорт --</option>
+    </select>
+  </div>
 
-  <input id="aircraft" placeholder="Введите ICAO тип (например B738)">
-  <button onclick="find()">Найти</button>
+  <div class="section">
+    <label for="terminal">Терминал:</label>
+    <select id="terminal">
+      <option value="">-- Выберите терминал --</option>
+    </select>
+  </div>
 
+  <div class="section">
+    <label for="flightType">Тип рейса:</label>
+    <select id="flightType">
+      <option value="">-- Не выбрано --</option>
+      <option value="international">Международный</option>
+      <option value="domestic">Внутренний</option>
+    </select>
+  </div>
+
+  <div class="section">
+    <label for="aircraftType">Тип самолета:</label>
+    <select id="aircraftType">
+      <option value="">-- Не выбрано --</option>
+    </select>
+  </div>
+
+  <div class="section">
+    <label for="category">Категория:</label>
+    <select id="category">
+      <option value="">-- Не выбрано --</option>
+      <option value="lowcost">Лоукост</option>
+      <option value="charter">Чартер</option>
+    </select>
+  </div>
+
+  <div class="section">
+    <label for="location">Расположение:</label>
+    <select id="location">
+      <option value="">-- Не выбрано --</option>
+      <option value="gate">Рукав терминала (Gate)</option>
+      <option value="remote">Летное поле (Remote)</option>
+    </select>
+  </div>
+
+  <button onclick="find()">Найти стойки</button>
+  
   <p id="result"></p>
- 
+
   <script>
-	async function find() {
-	  const type = document.getElementById('aircraft').value.toUpperCase();
-	  const res = await fetch('stands.json');
-	  const data = await res.json();
+    let standsData = {};
+    const aircraftTypes = ["A320", "A321", "B738", "B737", "B77W", "B772", "B744", "B788", "A333", "SU95"];
 
-	  console.log(data);
+    // Загружаем данные при загрузке страницы
+    fetch('stands.json')
+      .then(response => response.json())
+      .then(data => {
+        standsData = data;
+        
+        // Заполняем выпадающий список аэропортов
+        const airportSelect = document.getElementById('airport');
+        Object.keys(standsData.airports).forEach(code => {
+          const option = document.createElement('option');
+          option.value = code;
+          option.textContent = standsData.airports[code].name + ` (${code})`;
+          airportSelect.appendChild(option);
+        });
+      })
+      .catch(error => {
+        console.error('Ошибка при загрузке данных:', error);
+        document.getElementById('result').innerText = 'Ошибка при загрузке данных';
+      });
 
-	  const stands = data.UUWW[type];
+    // Обновляем терминалы при выборе аэропорта
+    document.getElementById('airport').addEventListener('change', function() {
+      const terminalSelect = document.getElementById('terminal');
+      terminalSelect.innerHTML = '<option value="">-- Выберите терминал --</option>';
+      
+      if (this.value) {
+        const airport = standsData.airports[this.value];
+        Object.keys(airport.terminals).forEach(key => {
+          const terminal = airport.terminals[key];
+          const option = document.createElement('option');
+          option.value = key;
+          option.textContent = terminal.name;
+          terminalSelect.appendChild(option);
+        });
+      }
+    });
 
-	  if (!stands) {
-		document.getElementById('result').innerText =
-		  'Тип не найден: ' + type;
-		return;
-	  }
+    // Заполняем типы самолетов
+    const aircraftSelect = document.getElementById('aircraftType');
+    aircraftTypes.forEach(type => {
+      const option = document.createElement('option');
+      option.value = type;
+      option.textContent = type;
+      aircraftSelect.appendChild(option);
+    });
 
-	  document.getElementById('result').innerText =
-		stands.join(', ');
-	}
-	</script>
+    function getIntersection(...arrays) {
+      if (arrays.length === 0) return [];
+      
+      // Фильтруем пустые массивы
+      const nonEmptyArrays = arrays.filter(arr => arr && arr.length > 0);
+      
+      if (nonEmptyArrays.length === 0) return [];
+      
+      // Берем первый массив и фильтруем его элементы
+      return nonEmptyArrays[0].filter(item =>
+        nonEmptyArrays.every(arr => arr.includes(item))
+      );
+    }
+
+    function find() {
+      const airport = document.getElementById('airport').value;
+      const terminal = document.getElementById('terminal').value;
+      const flightType = document.getElementById('flightType').value;
+      const aircraftType = document.getElementById('aircraftType').value;
+      const category = document.getElementById('category').value;
+      const location = document.getElementById('location').value;
+      const resultDiv = document.getElementById('result');
+
+      // Проверяем, что выбран аэропорт и терминал
+      if (!airport || !terminal) {
+        resultDiv.innerText = '⚠️ Выберите аэропорт и терминал';
+        return;
+      }
+
+      // Проверяем, что выбран хотя бы один критерий
+      if (!flightType && !aircraftType && !category && !location) {
+        resultDiv.innerText = '⚠️ Выберите хотя бы один критерий';
+        return;
+      }
+
+      const terminalData = standsData.airports[airport].terminals[terminal];
+      
+      // Собираем массивы для пересечения
+      const arraysToIntersect = [];
+      
+      if (flightType && terminalData[flightType].length > 0) {
+        arraysToIntersect.push(terminalData[flightType]);
+      }
+      if (aircraftType && terminalData[aircraftType].length > 0) {
+        arraysToIntersect.push(terminalData[aircraftType]);
+      }
+      if (category && terminalData[category].length > 0) {
+        arraysToIntersect.push(terminalData[category]);
+      }
+      if (location && terminalData[location].length > 0) {
+        arraysToIntersect.push(terminalData[location]);
+      }
+
+      // Вычисляем пересечение
+      const result = getIntersection(...arraysToIntersect);
+
+      if (result.length === 0) {
+        resultDiv.innerHTML = '❌ Нет доступных стоек для выбранных критериев';
+      } else {
+        resultDiv.innerHTML = `<strong>Доступные стойки:</strong><br>${result.join(', ')}`;
+      }
+    }
+  </script>
 </body>
 </html>
